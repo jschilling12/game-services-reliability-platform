@@ -2,7 +2,9 @@
 # stop.sh — Tear down the local stack
 set -euo pipefail
 
-COMPOSE_FILE="$(cd "$(dirname "$0")/../infra/compose" && pwd)/docker-compose.yml"
+COMPOSE_DIR="$(cd "$(dirname "$0")/../infra/compose" && pwd)"
 
-docker compose -f "$COMPOSE_FILE" down -v
+pushd "$COMPOSE_DIR" >/dev/null
+docker compose -f compose.yml -f compose.dev.yml down -v
+popd >/dev/null
 echo "Stack stopped and volumes removed."

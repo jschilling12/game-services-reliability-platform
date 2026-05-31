@@ -2,7 +2,13 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$ComposeFile = Resolve-Path "$PSScriptRoot\..\infra\compose\docker-compose.yml"
+$ComposeDir = Resolve-Path "$PSScriptRoot\..\infra\compose"
 
-docker compose -f $ComposeFile down -v
+Push-Location $ComposeDir
+try {
+    docker compose -f compose.yml -f compose.dev.yml down -v
+}
+finally {
+    Pop-Location
+}
 Write-Host "Stack stopped and volumes removed."

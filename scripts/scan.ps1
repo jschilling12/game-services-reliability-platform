@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $TrivyConfig = Resolve-Path "$PSScriptRoot\..\security\trivy\trivy.yaml"
-$Services    = @('matchmaking', 'session', 'telemetry', 'worker')
+$Services    = @('matchmaking-api', 'worker')
 $Failed      = $false
 
 foreach ($svc in $Services) {

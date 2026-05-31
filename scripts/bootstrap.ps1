@@ -5,11 +5,15 @@ $ErrorActionPreference = 'Stop'
 $ComposeDir = Resolve-Path "$PSScriptRoot\..\infra\compose"
 
 Write-Host "==> Checking required tools..."
-foreach ($cmd in @('docker', 'docker-compose')) {
-    if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-        Write-Error "ERROR: '$cmd' not found. Install Docker Desktop and try again."
-        exit 1
-    }
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    Write-Error "ERROR: 'docker' not found. Install Docker Desktop and try again."
+    exit 1
+}
+
+docker compose version *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "ERROR: Docker Compose plugin not available. Install or update Docker Desktop and try again."
+    exit 1
 }
 
 Write-Host "==> Copying .env.example -> .env (if not present)..."
@@ -21,7 +25,13 @@ if (-not (Test-Path $envFile)) {
 }
 
 Write-Host "==> Building all images..."
-docker compose -f (Join-Path $ComposeDir 'docker-compose.yml') build
+Push-Location $ComposeDir
+try {
+    docker compose -f compose.yml -f compose.dev.yml build
+}
+finally {
+    Pop-Location
+}
 
 Write-Host ""
 Write-Host "Bootstrap complete. Run 'scripts\start.ps1' to bring up the stack."

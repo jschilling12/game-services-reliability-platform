@@ -2,9 +2,11 @@
 # start.sh — Bring up the full local stack
 set -euo pipefail
 
-COMPOSE_FILE="$(cd "$(dirname "$0")/../infra/compose" && pwd)/docker-compose.yml"
+COMPOSE_DIR="$(cd "$(dirname "$0")/../infra/compose" && pwd)"
 
-docker compose -f "$COMPOSE_FILE" up -d
+pushd "$COMPOSE_DIR" >/dev/null
+docker compose -f compose.yml -f compose.dev.yml up -d
+popd >/dev/null
 
 echo ""
 echo "Stack is up:"

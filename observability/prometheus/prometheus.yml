@@ -14,7 +14,7 @@ scrape_configs:
 
   - job_name: matchmaking-api
     static_configs:
-      - targets: ["matchmaking-api:8000"]
+      - targets: ["api_blue:8000"]
     metrics_path: /metrics
 
   - job_name: worker

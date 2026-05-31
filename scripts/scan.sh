@@ -2,7 +2,7 @@
 # scan.sh — Run Trivy vulnerability scan against all service images
 set -euo pipefail
 
-SERVICES=(matchmaking session telemetry worker)
+SERVICES=(matchmaking-api worker)
 TRIVY_CONFIG="$(cd "$(dirname "$0")/../security/trivy" && pwd)/trivy.yaml"
 FAILED=0
 

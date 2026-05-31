@@ -2,9 +2,15 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$ComposeFile = Resolve-Path "$PSScriptRoot\..\infra\compose\docker-compose.yml"
+$ComposeDir = Resolve-Path "$PSScriptRoot\..\infra\compose"
 
-docker compose -f $ComposeFile up -d
+Push-Location $ComposeDir
+try {
+    docker compose -f compose.yml -f compose.dev.yml up -d
+}
+finally {
+    Pop-Location
+}
 
 Write-Host ""
 Write-Host "Stack is up:"

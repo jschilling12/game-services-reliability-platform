@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import signal
-import time
 
 import redis
 from prometheus_client import Counter, Gauge, Histogram, start_http_server

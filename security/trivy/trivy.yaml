@@ -1,0 +1,25 @@
+# Trivy vulnerability scanner configuration
+# https://aquasecurity.github.io/trivy/latest/docs/references/configuration/config-file/
+
+severity:
+  - CRITICAL
+  - HIGH
+
+scan:
+  # Fail the pipeline on fixable vulnerabilities only
+  exit-code: 1
+  ignore-unfixed: true
+
+# Paths to scan in filesystem mode
+# Used by the CI workflow for source-level scanning
+cache:
+  dir: .trivycache
+
+# Skip test/dev dependency directories
+skip-dirs:
+  - .git
+  - node_modules
+  - vendor
+
+# Report format used in CI (alternatives: table, json, sarif)
+format: table

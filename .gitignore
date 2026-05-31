@@ -1,0 +1,35 @@
+# Binaries and build output
+services/matchmaking/matchmaking
+services/session/session
+services/telemetry/telemetry
+services/worker/worker
+
+# Go test / coverage
+*.out
+*.test
+
+# Trivy cache
+.trivycache/
+
+# Python virtual environments
+.venv/
+.venv-*/
+venv/
+
+# SBOM output
+*.spdx.json
+
+# cosign private key — NEVER commit
+cosign.key
+
+# Local environment overrides
+infra/compose/.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+.history/

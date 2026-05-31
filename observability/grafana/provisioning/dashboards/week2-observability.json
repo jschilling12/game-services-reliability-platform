@@ -1,0 +1,17 @@
+{
+  "uid": "week2-observability",
+  "title": "Week 2 Observability",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "timezone": "browser",
+  "tags": ["week2", "observability"],
+  "panels": [
+    {"id":1,"type":"timeseries","title":"Request Count","gridPos":{"x":0,"y":0,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"sum(rate(matchmaking_http_requests_total[5m]))","legendFormat":"requests/sec"}]},
+    {"id":2,"type":"timeseries","title":"Error Rate","gridPos":{"x":8,"y":0,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"sum(rate(matchmaking_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(matchmaking_http_requests_total[5m]))","legendFormat":"5xx rate"}],"fieldConfig":{"defaults":{"unit":"percentunit"}}},
+    {"id":3,"type":"timeseries","title":"p50 Join/API Latency","gridPos":{"x":16,"y":0,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"histogram_quantile(0.50, sum(rate(matchmaking_http_request_duration_seconds_bucket[5m])) by (le))","legendFormat":"p50"}],"fieldConfig":{"defaults":{"unit":"s"}}},
+    {"id":4,"type":"timeseries","title":"p95 Join/API Latency","gridPos":{"x":0,"y":8,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"histogram_quantile(0.95, sum(rate(matchmaking_http_request_duration_seconds_bucket[5m])) by (le))","legendFormat":"p95"}],"fieldConfig":{"defaults":{"unit":"s"}}},
+    {"id":5,"type":"timeseries","title":"Queue Depth","gridPos":{"x":8,"y":8,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"max(matchmaking_queue_depth)","legendFormat":"pending matches"}]},
+    {"id":6,"type":"timeseries","title":"Worker Throughput","gridPos":{"x":16,"y":8,"w":8,"h":8},"datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"refId":"A","expr":"sum(rate(worker_matches_consumed_total[5m]))","legendFormat":"matches/sec"}]}
+  ]
+}

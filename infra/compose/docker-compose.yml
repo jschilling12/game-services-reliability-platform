@@ -1,0 +1,160 @@
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  jaeger_data:
+  postgres_data:
+
+services:
+  # ── Gateway ────────────────────────────────────────────────────────────────
+  gateway:
+    image: nginx:1.27-alpine
+    volumes:
+      - ../../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      matchmaking-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - backend
+
+  # ── Data stores ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: matchmaking
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d matchmaking"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  # ── Matchmaking API (FastAPI) ──────────────────────────────────────────────
+  matchmaking-api:
+    build: ../../services/matchmaking-api
+    environment:
+      POSTGRES_DSN: "postgresql://app:app@postgres:5432/matchmaking"
+      REDIS_URL: "redis://redis:6379/0"
+      OTEL_SERVICE_NAME: "matchmaking-api"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
+      OTEL_TRACES_EXPORTER: "otlp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+
+  # ── Worker ─────────────────────────────────────────────────────────────────
+  worker:
+    build: ../../services/worker
+    environment:
+      POSTGRES_DSN: "postgresql://app:app@postgres:5432/matchmaking"
+      REDIS_URL: "redis://redis:6379/0"
+      OTEL_SERVICE_NAME: "worker"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
+      OTEL_TRACES_EXPORTER: "otlp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "/app/healthcheck.py"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - backend
+
+  # ── Simulator ──────────────────────────────────────────────────────────────
+  simulator:
+    build: ../../simulator
+    command: ["--base-url", "http://gateway", "--rps", "5", "--duration", "120"]
+    depends_on:
+      - gateway
+    networks:
+      - backend
+
+  # ── Observability ──────────────────────────────────────────────────────────
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.1
+    command:
+      - --nginx.scrape-uri=http://gateway/nginx_status
+    depends_on:
+      - gateway
+    networks:
+      - backend
+  
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes:
+      - ../../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    volumes:
+      - ../../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    volumes:
+      - jaeger_data:/badger
+    ports:
+      - "16686:16686"  # UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - backend
+
+
+

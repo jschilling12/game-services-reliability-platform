@@ -1,13 +1,13 @@
-# Game Backend DevOps Platform
+# Game Services Reliability Platform
 
-A production-style game backend composed of four microservices, a reverse-proxy gateway, a load simulator, full observability, and a DevSecOps pipeline.
+A production-style platform for reliable game services, composed of four microservices, a reverse-proxy gateway, a load simulator, full observability, and a DevSecOps pipeline.
 
 ---
 
 ## Repository Layout
 
 ```
-game-backend-platform/
+game-services-reliability-platform/
 ├── gateway/                  # nginx reverse-proxy config
 ├── services/
 │   ├── matchmaking/          # Go service — player queue & match creation

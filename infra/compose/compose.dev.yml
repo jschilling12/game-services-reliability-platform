@@ -1,0 +1,36 @@
+services:
+  api_blue:
+    build: ../../services/matchmaking-api
+    image: game-backend-platform/matchmaking-api:dev
+    env_file:
+      - ./env/dev.env
+    environment:
+      OTEL_SERVICE_NAME: matchmaking-api-blue
+      DEPLOY_COLOR: blue
+      MATCH_FLOW: ${MATCH_FLOW:-v1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+
+  gateway:
+    depends_on:
+      api_blue:
+        condition: service_healthy
+
+  worker:
+    build: ../../services/worker
+    image: game-backend-platform/worker:dev
+    env_file:
+      - ./env/dev.env
+    environment:
+      OTEL_SERVICE_NAME: worker

@@ -1,0 +1,58 @@
+services:
+  api_blue:
+    image: ${API_BLUE_IMAGE}
+    env_file:
+      - ./env/staging.env
+    environment:
+      OTEL_SERVICE_NAME: matchmaking-api-blue
+      DEPLOY_COLOR: blue
+      MATCH_FLOW: v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+
+  api_green:
+    image: ${API_GREEN_IMAGE}
+    env_file:
+      - ./env/staging.env
+    environment:
+      OTEL_SERVICE_NAME: matchmaking-api-green
+      DEPLOY_COLOR: green
+      MATCH_FLOW: v2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+
+  gateway:
+    depends_on:
+      api_blue:
+        condition: service_healthy
+      api_green:
+        condition: service_healthy
+
+  worker:
+    image: ${WORKER_IMAGE}
+    env_file:
+      - ./env/staging.env
+    environment:
+      OTEL_SERVICE_NAME: worker

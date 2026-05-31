@@ -29,8 +29,9 @@ POSTGRES_DSN = os.environ["POSTGRES_DSN"]
 REDIS_URL = os.environ["REDIS_URL"]
 MATCH_QUEUE_KEY = "matches:pending"
 RANK_WINDOW = 50
-MATCH_QUEUE_KEY = "matches:pending"
-RANK_WINDOW = 50
+
+MATCH_FLOW = os.getenv("MATCH_FLOW", "v1")
+DEPLOY_COLOR = os.getenv("DEPLOY_COLOR", "unknown")
 
 HTTP_REQUESTS = Counter(
     "matchmaking_http_requests_total",
@@ -291,7 +292,11 @@ async def get_match(match_id: str, request: Request) -> dict:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "match_flow": MATCH_FLOW,
+        "deploy_color": DEPLOY_COLOR,
+    }
 
 
 @app.get("/ready")
